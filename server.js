@@ -6,6 +6,7 @@ const app = express();
 const CLIENT_ID = process.env.TWITCH_CLIENT_ID;
 const CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET;
 const sessions = new Map(); // state -> { channel, localPort, created }
+app.use((req, res, next) => { console.log('REQUEST BINNEN:', req.method, req.url); next(); });
 
 function redirectUri(req) {
   return `${req.protocol}://${req.get('host')}/auth/callback`;
