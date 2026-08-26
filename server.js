@@ -3,6 +3,7 @@ import express from 'express';
 import crypto from 'crypto';
 
 const app = express();
+app.set('trust proxy', 1);
 const CLIENT_ID = process.env.TWITCH_CLIENT_ID;
 const CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET;
 const sessions = new Map(); // state -> { channel, localPort, created }
