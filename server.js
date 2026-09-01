@@ -6,8 +6,7 @@ const app = express();
 app.set('trust proxy', 1);
 const CLIENT_ID = process.env.TWITCH_CLIENT_ID;
 const CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET;
-const sessions = new Map(); // state -> { channel, localPort, created }
-app.use((req, res, next) => { console.log('REQUEST BINNEN:', req.method, req.url); next(); });
+const sessions = new Map(); // state -> { localPort, created }
 
 function redirectUri(req) {
   return `${req.protocol}://${req.get('host')}/auth/callback`;
@@ -15,13 +14,11 @@ function redirectUri(req) {
 
 // Opgeroepen door de lokale app: begint de Twitch-login.
 app.get('/auth/start', (req, res) => {
-  const channel = String(req.query.channel || '').trim().toLowerCase();
   const localPort = String(req.query.local_port || '3000');
-  if (!channel) return res.status(400).send('channel ontbreekt');
   if (!CLIENT_ID || !CLIENT_SECRET) return res.status(500).send('Server niet geconfigureerd (TWITCH_CLIENT_ID/SECRET ontbreken).');
 
   const state = crypto.randomBytes(24).toString('hex');
-  sessions.set(state, { channel, localPort, created: Date.now() });
+  sessions.set(state, { localPort, created: Date.now() });
 
   const p = new URLSearchParams({
     client_id: CLIENT_ID,
@@ -57,7 +54,7 @@ app.get('/auth/callback', async (req, res) => {
 
     // Geef alleen het access token terug aan de lokale app op de gebruikers-pc.
     // Het CLIENT_SECRET verlaat deze server nooit.
-    const p = new URLSearchParams({ token: tok.access_token, channel: s.channel });
+    const p = new URLSearchParams({ token: tok.access_token });
     res.send(`<!doctype html><meta charset="utf-8"><title>Ingelogd</title>
       <body style="font-family:sans-serif;text-align:center;padding-top:4rem">
         <p>Ingelogd! De app gaat automatisch verder…</p>
